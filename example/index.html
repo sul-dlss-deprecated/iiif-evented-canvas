@@ -1,0 +1,384 @@
+<!doctype html>
+<html class="no-js" lang="">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title></title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/main.css">
+  </head>
+  <body>
+    <!--[if lt IE 8]>
+      <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+    <![endif]-->
+
+    <table class="legend">
+      <tr>
+        <td>
+          <div class="viewport">
+          </div>
+        </td>
+        <td><span>Viewport</span></td>
+      </tr>
+      <tr>
+        <td>
+          <div class="canvas">
+          </div>
+        </td>
+        <td>
+          <span>Canvas</span>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <div class="selected canvas">
+          </div>
+        </td>
+        <td>
+          <span>Selected Canvas</span>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <div class="frame">
+          </div>
+        </td>
+        <td><span>Frame</span></td>
+      </tr>
+    </div>
+
+    <div class="ribbon left black">
+      <a href="">Fork me on GitHub</a>
+    </div>
+
+    <h1>Layout Functions for IIIF Canvas Sequences</h1>
+    <p>
+      The IIIF Presentation API provides the necessary information to display a structured image collection, such as one representing a book or archive. The specification requires support for several reading directions and viewing hints, such as top-to-bottom scrolls, paged books, or sequences of single images. To lay these out in space is not a trivial task when we must also take into account zooming, styling, and annotation requirements. Iteratively building a DOM/CSS-based, canvas, or svg rendering of the collection would make it prohibitively resource intensive to query the resulting layout for multi-modal presentation, as is often required.
+    </p>
+    <p>
+      Instead, we must calculate an intermediate representation of the positions of rectangles in space in a normalised coordinate system which the programmer can scale to the given rendering environment. The layout can be rendered using different technologies for distinct purposes: DOM for styling, canvas for a minimap, OpenSeadragon for interaction. Changes in this intermediate representation can then be tracked by the multiple consuming objects and re-rendered appropriately, without relying on DOM querying. This library provides a set of functions that makes these layout calculations for the programmer's convenience.
+    </p>
+    <p>
+      The examples below render the output of the provided layout algorithms. They conclude with an example of a simple navigator composed out of these layouts.
+    </p>
+    <h2>Inputs and Outputs</h2>
+    These functions take in an array of IIIF Canvases, a viewport object, and a set of optional layout parameters, described below.
+    <h3>IIIF Sequence/Canvases</h3>
+    All these functions act on an array of IIIF 2.1 canvases (described at iiif.io). This array is usually derived from a IIIF manifest sequence.
+    <h3>Viewport</h3>
+    The viewport input is an object giving the dimensions of the container into which the layout will be rendered. The aspect ratio of the viewport is a major determining constraint on the resultant layout.
+    <h2>Layout Primitives</h2>
+    <h3>Canvas</h3>
+    The canvas is the fundamental layout building block. Its dimensions are taken automatically from the IIIF sequence input to the function; the programmer can not alter its dimensions.
+    <h3>Frame</h3>
+    A canvas sits inside a frame. In overview layouts, the frame "frames" the canvas. The purpose of this object is to allow space between canvases and, optionally, a label or other overlays in a target rendering.
+    <h4>FramePadding</h4>
+    The frame padding puts space around the canvas in overview mode to make room for a label and provide visual space between elements.
+    <div id="frame-padding-diagram">
+    </div>
+    <h3>Vantage</h3>
+    A "vantage" gives the dimensions of the viewport from which to optimally view a selected canvas. Every selected canvas will have a target "vantage" generated for it. This can either be used in a renderer to move the viewport or explicitly drawn in a minimap, as in some of the examples below.
+    <h4>Viewport Padding</h4>
+    The viewport padding applies to every vantage, and allows the programmer to leave space in key states of the layout for controls that may sit on top of the rendering container, such as titles, thumbnail strips, or information panels. This allows a zooming interface to pan or zoom underneath these elements, but still allow state in which overlaid controls to not overlap the image rendering.
+    <h2>Left-to-Right Layouts</h2>
+    <h3>Individuals</h3>
+    <h4>Overview Perspective</h4>
+    <div class="layoutControls">
+      <label for="showViewport">Show Viewport</label>
+      <input name="showViewport" type="checkbox" checked="true"/>
+      <label for="viewportAspectRatio">Viewport Aspect Ratio</label>
+      <input name="viewportAspectRatio" type="range" value="1" step="0.1" min="0.2" max="3"/>
+      <label for="showFrames">Show Frames</label>
+      <input name="showFrames" type="checkbox" checked="true"/>
+      <label for="showCanvasNumbers">Show Canvas Numbers</label>
+      <input name="showCanvasNumbers" type="checkbox" checked="true"/>
+    </div>
+    <div id="left-right-individuals-overview">
+    </div>
+    <h4>Intermediate Perspective</h4>
+    <div id="left-right-individuals-intermediate">
+    </div>
+    <h4>Detail Perspective</h4>
+    <div id="left-right-individuals-detail">
+    </div>
+    <h3>Paged</h3>
+    <h4>Overview Perspective</h4>
+    <div id="left-right-paged-overview">
+    </div>
+    <h4>Intermediate Perspective</h4>
+    <div id="left-right-paged-intermediate">
+    </div>
+    <h4>Detail Perspective</h4>
+    <div id="left-right-paged-detail">
+    </div>
+    <h3>Continuous</h3>
+    <h4>Overview Perspective</h4>
+    <div id="left-right-continuous-overview">
+    </div>
+    <h4>Intermediate Perspective</h4>
+    <div id="left-right-continuous-intermediate">
+    </div>
+    <h4>Detail Perspective</h4>
+    <div id="left-right-continuous-detail">
+    </div>
+    <h2>Right-to-Left Layouts</h2>
+    <h3>Individuals</h3>
+    <h4>Overview Perspective</h4>
+    <div id="right-left-individuals-overview">
+    </div>
+    <div class="contribute">
+      <p class="contribute-message">
+        Please help expand these layouts on github.
+      </p>
+    </div>
+    <h4>Intermediate Perspective</h4>
+    <div id="right-left-individuals-intermediate">
+    </div>
+    <div class="contribute">
+      <p class="contribute-message">
+        Please help expand these layouts on github.
+      </p>
+    </div>
+    <h4>Detail Perspective</h4>
+    <div id="right-left-individuals-detail">
+    </div>
+    <div class="contribute">
+      <p class="contribute-message">
+        Please help expand these layouts on github.
+      </p>
+    </div>
+    <h3>Paged</h3>
+    <h4>Overview Perspective</h4>
+    <div id="right-left-paged-overview">
+    </div>
+    <div class="contribute">
+      <p class="contribute-message">
+        Please help expand these layouts on github.
+      </p>
+    </div>
+    <h4>Intermediate Perspective</h4>
+    <div id="right-left-paged-intermediate">
+    </div>
+    <div class="contribute">
+      <p class="contribute-message">
+        Please help expand these layouts on github.
+      </p>
+    </div>
+    <h4>Detail Perspective</h4>
+    <div id="right-left-paged-detail">
+    </div>
+    <div class="contribute">
+      <p class="contribute-message">
+        Please help expand these layouts on github.
+      </p>
+    </div>
+    <h3>Continuous</h3>
+    <h4>Overview Perspective</h4>
+    <div id="right-left-continuous-overview">
+    </div>
+    <div class="contribute">
+      <p class="contribute-message">
+        Please help expand these layouts on github.
+      </p>
+    </div>
+    <h4>Intermediate Perspective</h4>
+    <div id="right-left-continuous-intermediate">
+    </div>
+    <div class="contribute">
+      <p class="contribute-message">
+        Please help expand these layouts on github.
+      </p>
+    </div>
+    <h4>Detail Perspective</h4>
+    <div id="right-left-continuous-detail">
+    </div>
+    <div class="contribute">
+      <p class="contribute-message">
+        Please help expand these layouts on github.
+      </p>
+    </div>
+    <h2>Top-to-Bottom Layouts</h2>
+    <h3>Individuals</h3>
+    <h4>Overview Perspective</h4>
+    <div id="top-bottom-individuals-overview">
+    </div>
+    <div class="contribute">
+      <p class="contribute-message">
+        Please help expand these layouts on github.
+      </p>
+    </div>
+    <h4>Intermediate Perspective</h4>
+    <div id="top-bottom-individuals-intermediate">
+    </div>
+    <div class="contribute">
+      <p class="contribute-message">
+        Please help expand these layouts on github.
+      </p>
+    </div>
+    <h4>Detail Perspective</h4>
+    <div id="top-bottom-individuals-detail">
+    </div>
+    <div class="contribute">
+      <p class="contribute-message">
+        Please help expand these layouts on github.
+      </p>
+    </div>
+    <h3>Paged</h3>
+    <h4>Overview Perspective</h4>
+    <div id="top-bottom-paged-overview">
+    </div>
+    <div class="contribute">
+      <p class="contribute-message">
+        Please help expand these layouts on github.
+      </p>
+    </div>
+    <h4>Intermediate Perspective</h4>
+    <div id="top-bottom-paged-intermediate">
+    </div>
+    <div class="contribute">
+      <p class="contribute-message">
+        Please help expand these layouts on github.
+      </p>
+    </div>
+    <h4>Detail Perspective</h4>
+    <div id="top-bottom-paged-detail">
+    </div>
+    <div class="contribute">
+      <p class="contribute-message">
+        Please help expand these layouts on github.
+      </p>
+    </div>
+    <h3>Continuous</h3>
+    <h4>Overview Perspective</h4>
+    <div id="top-bottom-continuous-overview">
+    </div>
+    <div class="contribute">
+      <p class="contribute-message">
+        Please help expand these layouts on github.
+      </p>
+    </div>
+    <h4>Intermediate Perspective</h4>
+    <div id="top-bottom-continuous-intermediate">
+    </div>
+    <div class="contribute">
+      <p class="contribute-message">
+        Please help expand these layouts on github.
+      </p>
+    </div>
+    <h4>Detail Perspective</h4>
+    <div id="top-bottom-continuous-detail">
+    </div>
+    <div class="contribute">
+      <p class="contribute-message">
+        Please help expand these layouts on github.
+      </p>
+    </div>
+    <h2>Bottom-to-Top Layouts</h2>
+    <h3>Individuals</h3>
+    <h4>Overview Perspective</h4>
+    <div id="bottom-top-individuals-overview">
+    </div>
+    <div class="contribute">
+      <p class="contribute-message">
+        Please help expand these layouts on github.
+      </p>
+    </div>
+    <h4>Intermediate Perspective</h4>
+    <div id="bottom-top-individuals-intermediate">
+    </div>
+    <div class="contribute">
+      <p class="contribute-message">
+        Please help expand these layouts on github.
+      </p>
+    </div>
+    <h4>Detail Perspective</h4>
+    <div id="bottom-top-individuals-detail">
+    </div>
+    <div class="contribute">
+      <p class="contribute-message">
+        Please help expand these layouts on github.
+      </p>
+    </div>
+    <h3>Paged</h3>
+    <div id="bottom-top-paged-overview">
+    </div>
+    <h4>Overview Perspective</h4>
+    <div class="contribute">
+      <p class="contribute-message">
+        Please help expand these layouts on github.
+      </p>
+    </div>
+    <h4>Intermediate Perspective</h4>
+    <div id="bottom-top-paged-intermediate">
+    </div>
+    <div class="contribute">
+      <p class="contribute-message">
+        Please help expand these layouts on github.
+      </p>
+    </div>
+    <h4>Detail Perspective</h4>
+    <div id="bottom-top-paged-detail">
+    </div>
+    <div class="contribute">
+      <p class="contribute-message">
+        Please help expand these layouts on github.
+      </p>
+    </div>
+    <h3>Continuous</h3>
+    <h4>Overview Perspective</h4>
+    <div id="bottom-top-continuous-overview">
+    </div>
+    <div class="contribute">
+      <p class="contribute-message">
+        Please help expand these layouts on github.
+      </p>
+    </div>
+    <h4>Intermediate Perspective</h4>
+    <div id="bottom-top-continuous-intermediate">
+    </div>
+    <div class="contribute">
+      <p class="contribute-message">
+        Please help expand these layouts on github.
+      </p>
+    </div>
+    <h4>Detail Perspective</h4>
+    <div id="bottom-top-continuous-detail">
+    </div>
+    <div class="contribute">
+      <p class="contribute-message">
+        Please help expand these layouts on github.
+      </p>
+    </div>
+    <h2>Notes on Transitions</h2>
+    <h3>Overview to Detail Perspective</h3>
+    <p>
+      The transition requires two steps. The selected canvas is the anchor of all intermediate layouts, so any selected canvas in intermediate layout will have the same coordinates as it does in the overview layout. Step one can therefore use the target x and y positions of the canvases and viewport to transition directly. Once the intermediate layout is reached, the detail layout is calculated, and offest so that the dimensions of the selected canvas(es) are identical to those of the detail layout. Then all canvases are placed at those positions within one frame (without transition).
+    </p>
+    <div id="overview-detail-transition-diagram">
+    </div>
+    <h3>Detail to Overview Perspective</h3>
+    <div id="detail-overview-transition-diagram">
+    </div>
+    <h3>Detail to Detail (Changing the Selected Canvas)</h3>
+    <div id="detail-detail-transition-diagram">
+    </div>
+    <h2>Shifting Between Modes in Overview Perspective</h2>
+    <p>
+      No special steps are required to shift between viewing modes in the overview perspective; items' x and y positions simply transition to their new targets.
+    </p>
+    <h2>Shifting Between Modes in Detail Perspective</h2>
+    <div id="detail-modes-transition-diagram">
+    </div>
+    <h2>Shifting Between Reading Directions in Detail Perspective</h2>
+    <div id="detail-directions-transition-diagram">
+    </div>
+    <script src="https://code.jquery.com/jquery-1.12.2.min.js"></script>
+    <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.12.2.min.js"><\/script>')</script>
+    <script src="js/syntaxis.js"></script>
+    <script src="js/etch.bundle.js"></script>
+    <script src="js/example.js"></script>
+  </body>
+</html>

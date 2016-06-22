@@ -1,0 +1,34 @@
+{
+  "name": "iiif-constellations",
+  "version": "0.0.1",
+  "description": "Pure layout functions for iiif sequences that arrange many canvases in space.",
+  "main": "index.js",
+  "scripts": {
+    "test": "gulp test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sul-dlss/iiif-layout-functions.git"
+  },
+  "keywords": [
+    "iiif",
+    "layouts",
+    "manifest",
+    "visualisation"
+  ],
+  "author": "aeschylus, edsilv",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/sul-dlss/iiif-layout-functions/issues"
+  },
+  "homepage": "https://github.com/sul-dlss/iiif-layout-functions#readme",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "etch": "https://github.com/edsilv/etch.git#dev",
+    "babel-core": "^6.8.0",
+    "babel-loader": "^6.2.4",
+    "gulp": "^3.9.1",
+    "webpack": "^1.13.0"
+  }
+}
