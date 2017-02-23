@@ -1,7 +1,7 @@
 {
-  "name": "iiif-constellations",
+  "name": "iiif-evented-canvas",
   "version": "0.0.1",
-  "description": "Pure layout functions for iiif sequences that arrange many canvases in space.",
+  "description": "Utility object to manage loading and positioning events for IIIF canvas tilesources",
   "main": "index.js",
   "scripts": {
     "test": "gulp test"
