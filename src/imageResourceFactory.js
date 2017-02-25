@@ -1,12 +1,17 @@
-require('openseadragon');
 var ImageResource = require('./ImageResource');
+var ThumbnailFactory = require('./ThumbnailFactory');
 
 var _getRectFromStringArray = function(arr) {
   var rectArray = arr.map(function(number) {
     return parseInt(number, 10);
   });
 
-  return new OpenSeadragon.Rect(rectArray[0] , rectArray[1], rectArray[2], rectArray[3]);
+  return {
+    x: rectArray[0],
+    y: rectArray[1],
+    width: rectArray[2],
+    height: rectArray[3]
+  };
 };
 
 var _getSegmentFromUrl = function(url) {
@@ -54,15 +59,16 @@ var _buildImageConfig = function(resource) {
     }
   };
 
-  var imageTileSource =  _getImageTilesource();
+  console.log(_getImageTilesource());
 
   return {
     // the ID is to use in the DOM, so remove special characters. The URL may not be unique, so add a salt.
     id: id.replace(/[^a-z0-9-_]+/gi, "") + Math.floor(Math.random() * 1000),
     label: resource.label,
-    tileSource: imageTileSource,
+    tileSource: _getImageTilesource(),
     clipRegion: _getSegmentFromUrl(id),
-    dynamic: isDynamic
+    dynamic: isDynamic,
+    thumbUrl: ThumbnailFactory.getThumbUrl(resource, 200)
   };
 };
 
@@ -96,12 +102,12 @@ var ImageResourceFactory = function(image, parent) {
 
   var _makeCoordinatesPercentages = function(bounds) {
     // We want to deal with these in terms of percentages relative to the canvas.
-    return new OpenSeadragon.Rect(
-      bounds.x / parent.bounds.width,
-      bounds.y / parent.bounds.width,
-      bounds.width / parent.bounds.width,
-      bounds.height / parent.bounds.height
-    );
+    return {
+      x: bounds.x / parent.bounds.width,
+      y: bounds.y / parent.bounds.width,
+      width: bounds.width / parent.bounds.width,
+      height: bounds.height / parent.bounds.height
+    };
   };
 
   var _makeImageFromConfig = function(config) {
@@ -117,25 +123,28 @@ var ImageResourceFactory = function(image, parent) {
   };
 
   switch(resourceType) {
-    case 'dctypes:Image':
-      var config = _buildImageConfig(image.resource);
+  case 'dctypes:Image':
+  case 'dcTypes:Image':
+  case 'dcterms:Image':
+  case 'dcTerms:Image':
+    var config = _buildImageConfig(image.resource, parent);
+    return _makeImageFromConfig(config);
+  case 'oa:Choice':
+    var configs = _buildChoiceConfigs(image.resource);
+    return configs.map(function(config) {
       return _makeImageFromConfig(config);
-    case 'oa:Choice':
-      var configs = _buildChoiceConfigs(image.resource);
-      return configs.map(function(config) {
-        return _makeImageFromConfig(config);
-      });
-    case 'oa:SpecificResource':
-      var resource = image.resource;
-      config = _buildImageConfig(resource);
+    });
+  case 'oa:SpecificResource':
+    var resource = image.resource;
+    config = _buildImageConfig(resource);
 
-      if(config && resource.selector && resource.selector.region) {
-        var clipArray = resource.selector.region.split(',');
-        config.clipRegion = _getRectFromStringArray(clipArray);
-      }
-      return _makeImageFromConfig(config);
-    default:
-      throw new Error("Cannot create an image from type " + resourceType);
+    if(config && resource.selector && resource.selector.region) {
+      var clipArray = resource.selector.region.split(',');
+      config.clipRegion = _getRectFromStringArray(clipArray);
+    }
+    return _makeImageFromConfig(config);
+  default:
+    throw new Error("Cannot create an image from type " + resourceType);
   }
 };
 

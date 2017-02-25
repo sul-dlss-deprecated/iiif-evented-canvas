@@ -1,14 +1,16 @@
 var path = require('path');
 
 module.exports = {
-  entry: './src/main.js',
+  entry: './src/iiifEventedCanvas.js',
   output: {
     path: __dirname,
-    filename: 'index.js'
+    filename: 'dist/iiif-evented-canvas.js',
+    libraryTarget:'umd',
+    library: 'iiifEventedCanvas'
   },
   module: {
     loaders: [
-      { test: path.join(__dirname, 'es6'),
+      { test: path.join(__dirname, 'src'),
         loader: 'babel-loader' }
     ]
   }

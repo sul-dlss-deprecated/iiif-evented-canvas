@@ -1,31 +1,27 @@
-
-require('openseadragon');
 var ImageResource = require('./ImageResource');
 var ImageResourceFactory = require('./ImageResourceFactory');
 var ThumbnailFactory = require('./ThumbnailFactory');
 
+console.log('I am loaded');
 var CanvasObject = function(config) {
   'use strict';
+  console.log('I am constructed');
   var self = this;
+
+  this.dispatcher = config.dispatcher;
+  this.id = config.canvas['@id'];
+  this.label = config.canvas.label;
+  this.canvas = config.canvas;
   this.clipRegion = config.clipRegion;
   this.opacity = config.opacity || 1;
   this.index = config.index;
-
-  this.id = config.canvas['@id'];
-
   this.bounds = {
     x : config.x || 0,
     y : config.y || 0,
     height : config.canvas.height,
     width : config.canvas.width
   };
-
-  this.label = config.canvas.label;
   this.viewingHint = config.canvas.viewingHint;
-
-  this.dispatcher = config.dispatcher;
-  this.viewer = config.viewer;
-  this.canvas = config.canvas;
   this.images = [];
 
   if(config.canvas.images) {
@@ -36,55 +32,12 @@ var CanvasObject = function(config) {
       }
     });
   }
-  this._floatImagesToBottom();
+
+  this.thumbnailResource = ThumbnailFactory(this.canvas, self);
 };
 
 CanvasObject.prototype = {
-  removeThumbnail: function() {
-    if(this.thumbnail){
-      this.thumbnail.fade(0);
-      this.thumbnail.removeFromCanvas();
-      this.thumbnail.destroy();
-      delete this.thumbnail;
-    }
-  },
-
-  openMainTileSource: function(imageIndex) {
-    if(this.images.length === 0) {
-      return; // there are no images to open
-    }
-
-    this.dispatcher.emit('detail-tile-source-opened', { 'detail': this.id });
-
-    var image = this.getMainImage();
-    var self = this;
-
-    var onTileDrawn = function(event) {
-      if(event.detail.tileSource === image.tileSource) {
-        self.dispatcher.removeListener('image-resource-tile-source-opened', onTileDrawn);
-        self.removeThumbnail();
-      }
-    };
-    this.dispatcher.on('image-resource-tile-source-opened', onTileDrawn);
-    var thumbnailStatus = (this.thumbnail ? this.thumbnail.getStatus() : '');
-    image.openTileSource({
-      waitForFirstTile: thumbnailStatus === 'shown'
-    });
-  },
-
-  openThumbnail: function() {
-    var self = this;
-    this.thumbnail = ThumbnailFactory(this.canvas, self);
-    if(this.thumbnail) {
-      this.thumbnail.openTileSource();
-      this.images.push(this.thumbnail);
-      this.dispatcher.emit('detail-thumbnail-opened', { 'detail': this.id });
-    } else { // sometimes there isn't a thumbnail
-      this.openMainTileSource();
-    }
-  },
-
-  //Assumes that the point parameter is already in viewport coordinates.
+  // Assumes that the point parameter is already in viewport coordinates.
   containsPoint: function(point) {
     var rectRight = this.bounds.x + this.bounds.width;
     var rectBottom = this.bounds.y + this.bounds.height;
@@ -96,20 +49,20 @@ CanvasObject.prototype = {
     return this.images.filter(function(image) { return image.visible === true; });
   },
 
-  getDetailImages: function() {
-    return this.images.filter(function(image) { return image.imageType === "detail"; });
-  },
-
   getAlternateImages: function() {
     return this.images.filter(function(image) { return image.imageType === "alternate"; });
   },
 
-  getMainImage: function() {
-    return this.images.filter(function(image) { return image.imageType === "main"; })[0];
+  getMainImages: function() {
+    return this.images.filter(function(image) { return image.imageType === "main"; });
   },
 
   getImageById: function(id) {
     return this.images.filter(function(image) { return image.id === id; })[0];
+  },
+
+  getThumbnailResource: function() {
+    return this.thumbnailResource;
   },
 
   setBounds: function(x, y, width, height) {
@@ -119,19 +72,95 @@ CanvasObject.prototype = {
     this.bounds.width = width;
     this.bounds.height = height;
 
-    this.images.forEach(function(image) {
-      image.updateForParentChange(true);
-    });
+    self.dispatcher.emit('canvas-position-updated', self);
   },
 
-  // Returns an OpenSeadragon Rect object - some OpenSeadragon consumers of this function want one,
-  // and others can get x, y, width and height out easily.
   getBounds: function() {
-    return new OpenSeadragon.Rect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
+    var self = this;
+    return {
+      x: this.bounds.x,
+      y: this.bounds.y,
+      width: this.bounds.width,
+      height: this.bounds.height,
+      getTopLeft: function() {
+        return {
+          x: self.bounds.x,
+          y: self.bounds.y
+        };
+      }
+    };
+  },
+
+  canvasToWorldCoordinates: function(canvasRegion) {
+    var self = this,
+        scaleFactor = self.bounds.width/self.canvas.width;
+
+    return {
+      x: self.bounds.x + (canvasRegion.x * scaleFactor),
+      y: self.bounds.y + (canvasRegion.y * scaleFactor),
+      width: canvasRegion.width * scaleFactor,
+      height: canvasRegion.height * scaleFactor
+    };
   },
 
   getAspectRatio: function() {
     return this.bounds.width / this.bounds.height;
+  },
+
+  getThumbnailNeeded: function() {
+    return this.thumbnailNeeded;
+  },
+
+  setThumbnailNeeded: function(needed) {
+    this.thumbnailNeeded = needed;
+    if (needed) {
+      this.thumbnailResource.setNeeded(true);
+      this.dispatcher.emit('canvas-thumbnail-needed', this);
+    }
+  },
+
+  show: function(timeout) {
+    var self = this;
+
+    if (!this.needed) {
+      this.setNeeded(true);
+    }
+
+    this.visible = true;
+    this.getMainImages().forEach(function(image) {
+
+      image.show();
+
+      function removeThumb() {
+        if (image.getStatus() === 'drawn') {
+          self.thumbnailResource.remove();
+        }
+      }
+
+      self.dispatcher.on('image-status-updated', removeThumb);
+    });
+
+    this.dispatcher.emit('canvas-show', this);
+  },
+
+  hide: function(timeout) {
+    this.visible = false;
+    this.dispatcher.emit('canvas-hide', this);
+  },
+
+  getVisible: function() {
+    return this.visible;
+  },
+
+  setNeeded: function(needed) {
+    this.needed = needed;
+    if (needed) {
+      this.dispatcher.emit('canvas-needed', this);
+    }
+  },
+
+  getNeeded: function() {
+    return this.needed;
   },
 
   getOpacity: function() {
@@ -157,9 +186,9 @@ CanvasObject.prototype = {
     this._floatImagesToBottom();
     var oldIndex = this.images.indexOf(image);
 
-    console.log("old index: " + oldIndex);
-    console.log("index: " + index);
     if (index === oldIndex || oldIndex === -1 ) {
+      // Index either is invalid or is the same
+      // as the previous index, requiring no change.
         return;
     }
     if ( index >= this.images.length ) {
