@@ -2,10 +2,9 @@ var ImageResource = require('./ImageResource');
 var ImageResourceFactory = require('./ImageResourceFactory');
 var ThumbnailFactory = require('./ThumbnailFactory');
 
-console.log('I am loaded');
 var CanvasObject = function(config) {
   'use strict';
-  console.log('I am constructed');
+
   var self = this;
 
   this.dispatcher = config.dispatcher;
