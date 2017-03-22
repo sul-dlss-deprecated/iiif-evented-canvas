@@ -59,8 +59,6 @@ var _buildImageConfig = function(resource) {
     }
   };
 
-  console.log(_getImageTilesource());
-
   return {
     // the ID is to use in the DOM, so remove special characters. The URL may not be unique, so add a salt.
     id: id.replace(/[^a-z0-9-_]+/gi, "") + Math.floor(Math.random() * 1000),
