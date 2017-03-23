@@ -36,8 +36,11 @@ var _buildImageConfig = function(resource) {
   // determine whether the resource is dynamic
   var _isDynamic = function() {
     return (!!(resource.service) &&
-    resource.service['@context'] == "http://iiif.io/api/image/2/context.json" &&
-    !resource.service.width);
+            (resource.service['@context'] == "http://iiif.io/api/image/2/context.json" ||
+             resource.service['@context'] == "https://iiif.io/api/image/2/context.json" ||
+             resource.service['@context'] == "http://iiif.io/api/image/1/context.json" ||
+             resource.service['@context'] == "https://iiif.io/api/image/1/context.json")); // &&
+            // !resource.service.width); Let it work anyway, just ignore.
   };
 
   var isDynamic = _isDynamic();
@@ -97,6 +100,8 @@ var _buildChoiceConfigs = function(resource) {
 
 var ImageResourceFactory = function(image, parent) {
   var resourceType = image.resource['@type']; // can be oa:Choice, oa:SpecificResource, or dctypes:Image
+
+
 
   var _makeCoordinatesPercentages = function(bounds) {
     // We want to deal with these in terms of percentages relative to the canvas.
