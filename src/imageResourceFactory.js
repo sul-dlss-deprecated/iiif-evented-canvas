@@ -39,7 +39,8 @@ var _buildImageConfig = function(resource) {
             (resource.service['@context'] == "http://iiif.io/api/image/2/context.json" ||
              resource.service['@context'] == "https://iiif.io/api/image/2/context.json" ||
              resource.service['@context'] == "http://iiif.io/api/image/1/context.json" ||
-             resource.service['@context'] == "https://iiif.io/api/image/1/context.json")); // &&
+             resource.service['@context'] == "https://iiif.io/api/image/1/context.json" ||
+             resource.service['@context'] == "http://library.stanford.edu/iiif/image-api/1.1/context.json")); // &&
             // !resource.service.width); Let it work anyway, just ignore.
   };
 
