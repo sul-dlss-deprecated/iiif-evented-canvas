@@ -54,7 +54,7 @@ var _buildImageConfig = function(resource) {
 
   var _getImageTilesource = function() {
     if (isDynamic) {
-      return id + '/info.json';
+      return id.replace(/\/+$/, "") + '/info.json'; // remove trailing slash
     } else {
       return {
         type: 'image',
