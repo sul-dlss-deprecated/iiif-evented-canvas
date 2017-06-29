@@ -14,7 +14,7 @@ var getResourceFormat = function(mimeType) {
   case('image/gif'):
     return 'gif';
   default:
-    throw(imageFormatError);
+    return 'jpg';
   }
 };
 
