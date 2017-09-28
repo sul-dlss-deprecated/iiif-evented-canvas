@@ -17,8 +17,8 @@ var CanvasObject = function(config) {
   this.bounds = {
     x : config.x || 0,
     y : config.y || 0,
-    height : config.canvas.height,
-    width : config.canvas.width
+    height : parseInt(config.canvas.height),
+    width : parseInt(config.canvas.width)
   };
   this.viewingHint = config.canvas.viewingHint;
   this.images = [];
