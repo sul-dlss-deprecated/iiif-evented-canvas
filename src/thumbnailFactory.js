@@ -37,9 +37,16 @@ var getThumbUrl = function(resource, width) {
   };
 
   var id = resource['@id'];
+  if (typeof resource === 'string' || resource instanceof String) {
+    id = resource;
+  }
   if(!id.toLowerCase().match(/^.*\.(png|jpg|jpeg|gif)$/)) { // it is still a service URL
     var format = getResourceFormat(resource.format);
-    return resource.service['@id'] + buildResourceSize() + '0/' + getTileBasename() + '.' + format;
+    if (resource.service) {
+      return resource.service['@id'] + buildResourceSize() + '0/' + getTileBasename() + '.' + format;
+    } else {
+      return id;
+    }
   }
   else { // we still don't want the full size
     return id.replace("/full/full/", buildResourceSize());
