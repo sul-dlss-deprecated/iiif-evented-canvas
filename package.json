@@ -1,6 +1,6 @@
 {
   "name": "iiif-evented-canvas",
-  "version": "0.0.2-beta",
+  "version": "0.0.3-beta",
   "description": "An observable representation for IIIF canvases and their image resources to ease rendering management.",
   "main": "dist/iiif-evented-canvas.umd.js",
   "scripts": {
